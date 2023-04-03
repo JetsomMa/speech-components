@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>语音转文字输入</title>
+  <script src="https://www.mashaojie.cn/script/operation-ball.js" charset="UTF-8"></script>
+</head>
+<body>
+  <style>
+    /*如果是禁用长按选择文字功能，用css*/  
+    * {  
+        -webkit-touch-callout:none;  
+        -webkit-user-select:none;  
+        -khtml-user-select:none;  
+        -moz-user-select:none;  
+        -ms-user-select:none;  
+        user-select:none;  
+    } 
+   input {      
+        -webkit-user-select:auto; /*webkit浏览器*/     
+        user-select:auto;
+    } 
+  </style>
+  <button id="start-btn">开始录音</button>
+  <div id="result"></div>
+
+  <script>
+    // 如果是想禁用长按弹出菜单, 用js的话,阻止默认事件  
+    window.addEventListener('contextmenu', function(e){  
+        e.preventDefault();  
+    }); 
+
+    navigator.getUserMedia  = navigator.getUserMedia ||
+                          navigator.webkitGetUserMedia ||
+                          navigator.mozGetUserMedia ||
+                          navigator.msGetUserMedia;
+
+    if (navigator.getUserMedia) {
+      navigator.getUserMedia({audio:true}, function onSuccess(stream) {
+        console.log('已点击允许,开启成功');
+
+        const mySpeechRecognition = webkitSpeechRecognition || SpeechRecognition
+        const recognition = new mySpeechRecognition();
+        const startBtn = document.querySelector('#start-btn');
+        const resultDiv = document.querySelector('#result');
+
+        recognition.lang = 'zh-CN';
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        console.error(recognition)
+
+        startBtn.addEventListener('click', () => {
+          recognition.start();
+        });
+
+        recognition.onresult = (event) => {
+          let finalTranscript = '';
+          let interimTranscript = '';
+
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript;
+              resultDiv.innerHTML = finalTranscript;
+              alert(finalTranscript)
+            } else {
+              interimTranscript += transcript;
+              resultDiv.innerHTML = interimTranscript;
+            }
+          }
+        };
+        recognition.onerror = (event) => {
+          alert(JSON.stringify(event))
+        }
+        recognition.onstart = () => {
+          alert("start")
+        }
+        recognition.onend = () => {
+          alert("end")
+        }
+      }, function onError(error) {
+        console.error(error)
+        alert("获取授权失败！")
+      })
+    }
+  </script>
+  <div>这是一堆测试问问问问我呢嗯问我呢问问我</div>
+  <div>这是一堆测试问问问问我呢嗯问我呢问问我</div>
+  <div>这是一堆测试问问问问我呢嗯问我呢问问我</div>
+  <div>这是一堆测试问问问问我呢嗯问我呢问问我</div>
+  <div>这是一堆测试问问问问我呢嗯问我呢问问我</div>
+  <div>这是一堆测试问问问问我呢嗯问我呢问问我</div>
+  <div>这是一堆测试问问问问我呢嗯问我呢问问我</div>
+</body>
+</html>
