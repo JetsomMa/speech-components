@@ -1,241 +1,310 @@
-window.onload = function () {
-  // 添加视口设置
-  // var meta = document.createElement('meta');
-  // meta.name = 'viewport';
-  // meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0';
-  // document.head.appendChild(meta);
-
-  // 定义一个函数，入参为dom的 top left width height 返回值为新的 top left，要求dom的边沿不能超出屏幕展示区域
-  function getNewPosition(top, left, width, height) {
-    var newTop = top
-    var newLeft = left
-    if (left < 0) {
-      newLeft = 0
+(function () {
+  function init() {
+    let isMobile = false;
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      isMobile = true;
     }
-    if (left > document.documentElement.clientWidth - width) {
-      newLeft = document.documentElement.clientWidth - width
-    }
-    if (top < 0) {
-      newTop = 0
-    }
-    if (top > document.documentElement.clientHeight - height) {
-      newTop = document.documentElement.clientHeight - height
-    }
-    return {
-      top: newTop,
-      left: newLeft
-    }
-  }
 
-  // 获取设备宽度
-  // var deviceWidth = document.documentElement.clientWidth;
-  // 根据屏幕宽度动态调整小球与弹窗尺寸
-  // var ballRadius = 50 25;
-  // var popupWidth = deviceWidth > 480 ? 200 : 100;
-  // var popupHeight = deviceWidth > 480 ? 305 : 152.5;
-  
-  var ballRadius = 50;
-  var popupWidth = 200;
-  var popupHeight = 305;
-  // 创建小球元素，小球初始位置在屏幕右下角
-  var ball = document.createElement('div');
-  ball.style.width = ballRadius + 'px';
-  ball.style.height = ballRadius + 'px';
-  ball.style.background = 'url(https://download.mashaojie.cn/image/header.png)';
-  ball.style.backgroundSize = 'cover';
-  ball.style.position = 'fixed';
-  ball.style.zIndex = '99998';
-  ball.style.borderRadius = ballRadius + 'px';
-  ball.style.cursor = 'move';
-  ball.style.right = '20px';
-  ball.style.bottom = '20px';
-  document.body.appendChild(ball);
+    var meta = document.createElement('meta');
+    meta.name = 'viewport';
+    meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0';
+    document.head.appendChild(meta);
 
-  // 创建一个弹窗元素，宽200高300，默认不展示，有好看的背景色和立体感
-  var popup = document.createElement('div');
-  popup.style.width = popupWidth + 'px';
-  popup.style.height = popupHeight + 'px';
-  popup.style.backgroundColor = 'white';
-  popup.style.position = 'fixed';
-  popup.style.zIndex = '99999';
-  popup.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
-  popup.style.display = 'none';
-  document.body.appendChild(popup);
+    var ballRadius = 50;
+    var popupWidth = 260;
+    var popupHeight = 305;
+    var titleHeight = 35;
 
-  // 创建一个标题在弹窗的左上角展示，内容为“语音识别”
-  var title = document.createElement('div');
-  title.style.width = '100%';
-  title.style.height = '35px';
-  title.style.backgroundColor = 'white';
-  title.style.position = 'absolute';
-  title.style.top = '0';
-  title.style.textAlign = 'center';
-  title.style.lineHeight = '35px';
-  title.style.color = '#333333';
-  title.style.borderBottom = '1px solid #333333';
-  title.textContent = '语音识别';
-  popup.appendChild(title);
+    var ball = createBallElement(ballRadius);
+    var popup = createPopupElement(popupWidth, popupHeight);
 
-  // 创建一个关闭按钮，按钮相对于标题上下剧中
-  var closeBtn = document.createElement('div');
-  closeBtn.style.width = '20px';
-  closeBtn.style.height = '20px';
-  closeBtn.style.backgroundColor = '#87CEFA';
-  closeBtn.style.position = 'absolute';
-  closeBtn.style.right = '7px';
-  closeBtn.style.top = '7px';
-  closeBtn.style.borderRadius = '50%';
-  closeBtn.style.cursor = 'pointer';
-  closeBtn.style.textAlign = 'center';
-  closeBtn.style.lineHeight = '22px';
-  closeBtn.style.color = 'white';
-  closeBtn.textContent = 'X';
-  popup.appendChild(closeBtn);
+    var title = createTitleElement(titleHeight);
+    var closeBtn = createCloseBtnElement();
+    var textArea = createTextAreaElement();
+    var speechBtn = createSpeechBtnElement();
+    var comfirmBtn = createComfirmBtnElement();
 
-  // 创建一个文本域，弹窗中间展示
-  var textArea = document.createElement('textarea');
-  textArea.style.width = '100%';
-  textArea.style.height = '220px';
-  textArea.style.width = '96%';
-  textArea.style.marginLeft = '2%';
-  textArea.style.marginTop = '40px';
-  textArea.style.boxSizing = 'border-box';
-  textArea.style.backgroundColor = '#F5F5F5';
-  textArea.style.border = 'none';
-  textArea.style.resize = 'none';
-  popup.appendChild(textArea);
+    popup.appendChild(title);
+    popup.appendChild(closeBtn);
+    popup.appendChild(textArea);
+    popup.appendChild(speechBtn);
+    popup.appendChild(comfirmBtn);
 
-  // 创建一个按钮，在弹窗底部展示
-  var btn = document.createElement('div');
-  btn.style.width = '90%';
-  btn.style.marginLeft = '5%';
-  btn.style.marginBottom = '5px';
-  btn.style.height = '35px';
-  btn.style.backgroundColor = '#87CEFA';
-  btn.style.position = 'absolute';
-  btn.style.bottom = '0';
-  btn.style.cursor = 'pointer';
-  btn.style.borderRadius = '10px';
-  btn.style.textAlign = 'center';
-  btn.style.lineHeight = '40px';
-  btn.style.color = 'white';
-  btn.textContent = '提交';
-  popup.appendChild(btn);
+    var isDragging = false;
+    var clickLock = false;
+    var startX = 0;
+    var startY = 0;
+    var offsetX = 0;
+    var offsetY = 0;
 
-
-  // 当手指在小球上按下时，触发小球拖动标识
-  var isDragging = false;
-  var clickLock = false;
-  var ballX = 0;
-  var ballY = 0;
-  // PC端适配
-  ball.addEventListener('mousedown', function (e) {
-    isDragging = true;
-    ballX = e.clientX;
-    ballY = e.clientY;
-  });
-  // 手机浏览器适配
-  ball.addEventListener('touchstart', function (e) {
-    isDragging = true;
-    ballX = e.touches[0].clientX;
-    ballY = e.touches[0].clientY;
-  });
-
-  // 当手指移动时，小球跟着手指移动，且小球的中心点和手指的位置重合，小球的边沿不能超出屏幕展示区域
-  var moveLimit = (ballRadius * 7 / 24) ** 2
-  // PC端适配
-  document.addEventListener('mousemove', function (e) {
-    if (isDragging) {
-      var x = e.clientX - ballRadius / 2
-      var y = e.clientY - ballRadius / 2
-      var { top, left } = getNewPosition(y, x, ballRadius, ballRadius)
-
-      if (!clickLock && (e.clientX - ballX) ** 2 + (e.clientY - ballY) ** 2 >= moveLimit){
-        clickLock = true
+    function getNewPosition(offsetX, offsetY, width, height) {
+      offsetX = offsetX - width / 2;
+      offsetY = offsetY - height / 2;
+      var newTop = startY + offsetY
+      var newLeft = startX + offsetX
+      if (startX + offsetX < 0) {
+        newLeft = 0
       }
-
-      if(clickLock){
-        ball.style.top = top + 'px';
-        ball.style.left = left + 'px';
+      if (startX + offsetX + width > document.documentElement.clientWidth) {
+        newLeft = document.documentElement.clientWidth - width
+      }
+      if (startY + offsetY < 0) {
+        newTop = 0
+      }
+      if (startY + offsetY + height > document.documentElement.clientHeight) {
+        newTop = document.documentElement.clientHeight - height
+      }
+      return {
+        top: newTop,
+        left: newLeft
       }
     }
-  });
-  // 手机浏览器适配
-  document.addEventListener('touchmove', function (e) {
-    if (isDragging) {
-      var x = e.touches[0].clientX - ballRadius / 2;
-      var y = e.touches[0].clientY - ballRadius / 2;
-      var { top, left } = getNewPosition(y, x, ballRadius, ballRadius);
 
-      if (!clickLock && (e.touches[0].clientX - ballX) ** 2 + (e.touches[0].clientY - ballY) ** 2 >= moveLimit) {
+    function mousedownFunction (e) {
+      e.stopPropagation();
+      e.preventDefault();
+      isDragging = true;
+      if (e.type === 'touchstart') {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+      } else {
+        startX = e.clientX;
+        startY = e.clientY;
+      }
+    }
+    ball.addEventListener(isMobile ? 'touchstart' : 'mousedown', mousedownFunction, { passive: false } );
+    title.addEventListener(isMobile ? 'touchstart' : 'mousedown', mousedownFunction, { passive: false } );
+
+    var moveLimit = (ballRadius / 3) ** 2
+    document.addEventListener(isMobile ? 'touchmove' : 'mousemove', function (e) {
+      if (!isDragging) return;
+      e.preventDefault();
+      var x, y;
+      if (e.type === 'touchmove') {
+        x = e.touches[0].clientX;
+        y = e.touches[0].clientY;
+      } else {
+        x = e.clientX;
+        y = e.clientY;
+      }
+
+      offsetX = x - startX;
+      offsetY = y - startY;
+
+      if (!clickLock && offsetX ** 2 + offsetY ** 2 >= moveLimit) {
         clickLock = true;
       }
 
       if (clickLock) {
-        ball.style.top = top + 'px';
-        ball.style.left = left + 'px';
+        if(ball.style.display !== 'none'){
+          var { top, left } = getNewPosition(offsetX, offsetY, ballRadius, ballRadius);
+          ball.style.top = top + 'px';
+          ball.style.left = left + 'px';
+        }
+        if(popup.style.display !== 'none'){
+          var { top, left } = getNewPosition(offsetX, offsetY, popupWidth, titleHeight);
+          if(top + popupHeight > document.documentElement.clientHeight){
+            top = document.documentElement.clientHeight - popupHeight;
+          }
+          popup.style.top = top + 'px';
+          popup.style.left = left + 'px';
+        }
       }
-    }
-  });
+    }, { passive: false });
 
-  // 手指离开屏幕时，记录小球的位置
-  // PC端适配
-  document.addEventListener('mouseup', function (e) {
-    isDragging = false;
-  });
-  // 手机浏览器适配
-  document.addEventListener('touchend', function (e) {
-    isDragging = false;
-  });
+    document.addEventListener(isMobile ? 'touchend' : 'mouseup', function (e) {
+      if (isDragging) {
+        isDragging = false;
+        startX = 0;
+        startY = 0;
+        offsetX = 0;
+        offsetY = 0;
+      }
+    });
 
-  // 当小球ball被点击，记录小球的位置，小球隐藏，弹窗popup展示，弹窗的位置和小球的位置重合，且弹窗的边沿不能超出屏幕展示区域，弹窗的宽高和创建时一致，创建一个1s的动画，弹窗从小球的位置放大到弹窗的宽高
-  // PC端适配
-  ball.addEventListener('click', function (e) {
-    if (clickLock) {
-      clickLock = false
-      return
-    }
+    ball.addEventListener( isMobile ? 'touchend' : 'click', function(e) {
+      if (clickLock) {
+        clickLock = false
+        return
+      }
+      
+      ball.style.display = 'none';
+      popup.style.display = 'block';
 
-    ball.style.display = 'none';
-    popup.style.display = 'block';
-    var x = e.clientX - popupWidth / 2;
-    var y = e.clientY - popupHeight / 2;
-    var { top: y, left: x } = getNewPosition(y, x, popupWidth, popupHeight)
-    popup.style.top = y + 'px';
-    popup.style.left = x + 'px';
-    popup.style.transform = 'scale(0)';
-    setTimeout(function () {
-      popup.style.transform = 'scale(1)';
-    }, 0);
-  });
-  // 手机浏览器适配
-  ball.addEventListener('touchend', function (e) {
-    if (clickLock) {
-      clickLock = false
-      return
-    }
+      var x, y;
+      if (isMobile) {
+        x = e.changedTouches[0].clientX;
+        y = e.changedTouches[0].clientY;
+      } else {
+        x = e.clientX;
+        y = e.clientY;
+      }
 
-    ball.style.display = 'none';
-    popup.style.display = 'block';
-    var x = e.changedTouches[0].clientX - popupWidth / 2;
-    var y = e.changedTouches[0].clientY - popupHeight / 2;
-    var { top: y, left: x } = getNewPosition(y, x, popupWidth, popupHeight);
-    popup.style.top = y + 'px';
-    popup.style.left = x + 'px';
-    popup.style.transform = 'scale(0)';
-    setTimeout(function () {
-      popup.style.transform = 'scale(1)';
-    }, 0);
-  });
+      x = x - popupWidth + ballRadius / 2;
+      y = y - titleHeight / 2;
+      
+      var top, left;
+      if(y + popupHeight > document.documentElement.clientHeight){
+        top = document.documentElement.clientHeight - popupHeight;
+      }else{
+        top = y;
+      }
 
-  // 当关闭按钮closeBtn被点击，弹窗popup隐藏，小球ball展示在原来位置，创建一个1s的动画，小球从弹窗的位置缩小到小球的宽高
-  closeBtn.addEventListener('click', function () {
+      if(x < 0){
+        left = 0;
+      } else {
+        left = x;
+      }
+      
+      popup.style.top = top + 'px';
+      popup.style.left = left + 'px';
+      popup.style.transform = 'scale(0)';
+      setTimeout(function () {
+        popup.style.transform = 'scale(1)';
+      }, 0);
+    });
+    
+    closeBtn.addEventListener( isMobile ? 'touchend' : 'click', function(e) {
+      e.preventDefault();
+      popup.style.display = 'none';
+      ball.style.display = 'block';
+
+      // 将小球恢复到面板的中心位置
+      var x, y;
+      if (isMobile) {
+        x = e.changedTouches[0].clientX - popupWidth / 2;
+        y = e.changedTouches[0].clientY - popupHeight / 2;
+      } else {
+        x = e.clientX - popupWidth / 2;
+        y = e.clientY - popupHeight / 2;
+      }
+      var top = y + popupHeight / 2 - ballRadius / 2;
+      var left = x + popupWidth / 2 - ballRadius / 2;
+      ball.style.top = top + 'px';
+      ball.style.left = left + 'px';
+
+      ball.style.transform = 'scale(0)';
+      setTimeout(function () {
+        ball.style.transform = 'scale(1)';
+      }, 0);
+    }, { passive: false });
+
+    document.body.appendChild(ball);
+    document.body.appendChild(popup);
+  }
+
+  function createBallElement(ballRadius) {
+    var ball = document.createElement('div');
+    ball.style.width = ballRadius + 'px';
+    ball.style.height = ballRadius + 'px';
+    ball.style.background = 'url(https://download.mashaojie.cn/image/header.png)';
+    ball.style.backgroundSize = 'cover';
+    ball.style.position = 'fixed';
+    ball.style.zIndex = '99998';
+    ball.style.borderRadius = ballRadius + 'px';
+    ball.style.cursor = 'move';
+    ball.style.right = '20px';
+    ball.style.bottom = '20px';
+    return ball;
+  }
+
+  function createPopupElement(popupWidth, popupHeight) {
+    var popup = document.createElement('div');
+    popup.style.width = popupWidth + 'px';
+    popup.style.height = popupHeight + 'px';
+    popup.style.backgroundColor = 'white';
+    popup.style.position = 'fixed';
+    popup.style.zIndex = '99999';
+    popup.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
     popup.style.display = 'none';
-    ball.style.display = 'block';
-    ball.style.transform = 'scale(0)';
-    setTimeout(function () {
-      ball.style.transform = 'scale(1)';
-    }, 0);
-  });
-};
+    return popup;
+  }
+
+  function createTitleElement(titleHeight) {
+    var title = document.createElement('div');
+    title.style.width = '100%';
+    title.style.height = titleHeight + 'px';
+    title.style.backgroundColor = 'white';
+    title.style.position = 'absolute';
+    title.style.top = '0';
+    title.style.textAlign = 'center';
+    title.style.lineHeight = titleHeight + 'px';
+    title.style.color = '#333333';
+    title.style.borderBottom = '1px solid #333333';
+    title.textContent = '语音识别';
+    return title;
+  }
+
+  function createCloseBtnElement() {
+    var closeBtn = document.createElement('div');
+    closeBtn.style.width = '20px';
+    closeBtn.style.height = '20px';
+    closeBtn.style.backgroundColor = '#87CEFA';
+    closeBtn.style.position = 'absolute';
+    closeBtn.style.right = '7px';
+    closeBtn.style.top = '7px';
+    closeBtn.style.borderRadius = '50%';
+    closeBtn.style.cursor = 'pointer';
+    closeBtn.style.textAlign = 'center';
+    closeBtn.style.lineHeight = '22px';
+    closeBtn.style.color = 'white';
+    closeBtn.textContent = 'X';
+    return closeBtn;
+  }
+
+  function createTextAreaElement() {
+    var textArea = document.createElement('textarea');
+    textArea.style.width = '100%';
+    textArea.style.height = '220px';
+    textArea.style.width = '96%';
+    textArea.style.marginLeft = '2%';
+    textArea.style.marginTop = '40px';
+    textArea.style.boxSizing = 'border-box';
+    textArea.style.backgroundColor = '#F5F5F5';
+    textArea.style.border = 'none';
+    textArea.style.resize = 'none';
+    textArea.placeholder = '请触发语音识别，然后开始说话...';
+    return textArea;
+  }
+
+  function createSpeechBtnElement() {
+    var speechBtn = document.createElement('button');
+    speechBtn.style.width = '42%';
+    speechBtn.style.marginLeft = '5%';
+    speechBtn.style.marginBottom = '5px';
+    speechBtn.style.height = '35px';
+    speechBtn.style.backgroundColor = '#87CEFA';
+    speechBtn.style.bottom = '0';
+    speechBtn.style.cursor = 'pointer';
+    speechBtn.style.borderRadius = '10px';
+    speechBtn.style.textAlign = 'center';
+    speechBtn.style.fontSize = '16px';
+    speechBtn.style.color = 'white';
+    speechBtn.textContent = '语音识别';
+    speechBtn.style.userSelect = 'none';
+    return speechBtn;
+  }
+
+  function createComfirmBtnElement() {
+    var comfirmBtn = document.createElement('button');
+    comfirmBtn.style.width = '42%';
+    comfirmBtn.style.marginLeft = '5%';
+    comfirmBtn.style.marginBottom = '5px';
+    comfirmBtn.style.height = '35px';
+    comfirmBtn.style.backgroundColor = '#87CEFA';
+    comfirmBtn.style.bottom = '0';
+    comfirmBtn.style.cursor = 'pointer';
+    comfirmBtn.style.borderRadius = '10px';
+    comfirmBtn.style.textAlign = 'center';
+    comfirmBtn.style.fontSize = '16px';
+    comfirmBtn.style.color = 'white';
+    comfirmBtn.textContent = '确认完成';
+    comfirmBtn.style.userSelect = 'none';
+    return comfirmBtn;
+  }
+
+  window.onload = function() {
+    init()
+  }
+})();
 
