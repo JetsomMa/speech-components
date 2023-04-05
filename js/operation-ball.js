@@ -47,8 +47,10 @@
     function checkDisabledComfirm(){
       if(!textArea.value || disabledComfirm){
         comfirmBtn.disabled = true
+        comfirmBtn.style.backgroundColor = '#999999';
       } else {
         comfirmBtn.disabled = false
+        comfirmBtn.style.backgroundColor = '#87CEFA';
       }
     }
 
@@ -221,6 +223,9 @@
     // 当确认按钮被点击
     comfirmBtn.addEventListener( isMobile ? 'touchend' : 'click', function(e) {
       e.stopPropagation();
+      if(comfirmBtn.disabled){
+        return
+      }
       // 创建自定义事件
       var speechComfirm = new CustomEvent("speech-comfirm", {
         detail: {
@@ -230,8 +235,7 @@
 
       // 触发自定义事件
       document.dispatchEvent(speechComfirm);
-      closeBtn.click();
-      closeBtn.touchend();
+      closeBtn.dispatchEvent(new Event("click"));
     }, { passive: false });
 
     document.body.appendChild(ball);
@@ -423,6 +427,7 @@
       // console.log('OnRecognitionStart->开始识别', res);
       isCanStop = true;
       ballDom.speechBtn.textContent = '请说话...'
+      ballDom.speechBtn.style.backgroundColor = '#87CEFA';
     };
     // 一句话开始
     webAudioSpeechRecognizer.OnSentenceBegin = (res) => {
@@ -445,6 +450,7 @@
     webAudioSpeechRecognizer.OnRecognitionComplete = (res) => {
       // console.log('OnRecognitionComplete->识别结束', res);
       ballDom.speechBtn.textContent = '语音识别'
+      ballDom.speechBtn.style.backgroundColor = '#87CEFA';
       disabledComfirm = false
       ballDom.checkDisabledComfirm()
     };
@@ -452,6 +458,7 @@
     webAudioSpeechRecognizer.OnError = (res) => {
       // console.error('OnError->识别失败', res)
       ballDom.speechBtn.textContent = '语音识别'
+      ballDom.speechBtn.style.backgroundColor = '#87CEFA';
       alert('识别失败:' + JSON.stringify(res))
     };
   }
@@ -465,6 +472,7 @@
         webAudioSpeechRecognizer.stop();
       } else {
         ballDom.speechBtn.textContent = '链接中...'
+        ballDom.speechBtn.style.backgroundColor = '#999999';
         disabledComfirm = true
         ballDom.checkDisabledComfirm()
         webAudioSpeechRecognizer.start();
