@@ -4,26 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <title>语音转文字输入</title>
-  <script src="./operation-ball.js" charset="UTF-8"></script>
+  <script src="./js/speechrecognizer.js"></script>
+  <script src="./js/operation-ball.js" charset="UTF-8"></script>
 </head>
 <body>
   <style>
     /*如果是禁用长按选择文字功能，用css*/  
-    * {  
-        -webkit-touch-callout:none;  
-        -webkit-user-select:none;  
-        -khtml-user-select:none;  
-        -moz-user-select:none;  
-        -ms-user-select:none;  
-        user-select:none;  
-    } 
-   input {      
-        -webkit-user-select:auto; /*webkit浏览器*/     
-        user-select:auto;
-    } 
+    button { 
+      user-select: none; 
+      -webkit-user-select: none; 
+    }
   </style>
-  <button id="start-btn">开始录音</button>
-  <div id="result"></div>
+  <div style="width: 100%; height: 50%;">
+    <button id="start-btn">开始录音[web speech api版本，需要翻墙到美国才能使用]</button>
+    <div>web speech api识别结果：</div>
+    <div id="webSpeechApiResult"></div>
+  </div>
+  <br>
+  <div>---------------------------------------------------------------------------</div>
+  <div style="width: 100%; height: 50%;">
+    <div>腾讯语音识别结果：</div>
+    <div id="TXSpeechApiResult"></div>
+  </div>
 
   <script>
     // 如果是想禁用长按弹出菜单, 用js的话,阻止默认事件  
@@ -31,29 +33,18 @@
         e.preventDefault();  
     }); 
 
-    navigator.getUserMedia  = navigator.getUserMedia ||
-                          navigator.webkitGetUserMedia ||
-                          navigator.mozGetUserMedia ||
-                          navigator.msGetUserMedia;
+    const mySpeechRecognition = webkitSpeechRecognition || SpeechRecognition
+    const startBtn = document.querySelector('#start-btn');
+    const resultDiv = document.querySelector('#webSpeechApiResult');
 
-    if (navigator.getUserMedia) {
-      navigator.getUserMedia({audio:true}, function onSuccess(stream) {
-        console.log('已点击允许,开启成功');
-
-        const mySpeechRecognition = webkitSpeechRecognition || SpeechRecognition
-        const recognition = new mySpeechRecognition();
-        const startBtn = document.querySelector('#start-btn');
-        const resultDiv = document.querySelector('#result');
+    let recognition
+    startBtn.addEventListener('click', () => {
+      if(!recognition) {
+        recognition = new mySpeechRecognition();
 
         recognition.lang = 'zh-CN';
         recognition.continuous = true;
         recognition.interimResults = true;
-
-        console.error(recognition)
-
-        startBtn.addEventListener('click', () => {
-          recognition.start();
-        });
 
         recognition.onresult = (event) => {
           let finalTranscript = '';
@@ -64,7 +55,6 @@
             if (event.results[i].isFinal) {
               finalTranscript += transcript;
               resultDiv.innerHTML = finalTranscript;
-              alert(finalTranscript)
             } else {
               interimTranscript += transcript;
               resultDiv.innerHTML = interimTranscript;
@@ -72,26 +62,28 @@
           }
         };
         recognition.onerror = (event) => {
-          alert(JSON.stringify(event))
+          console.error("recognition onerror", event)
         }
         recognition.onstart = () => {
-          alert("start")
+          console.log("recognition start")
         }
         recognition.onend = () => {
-          alert("end")
+          console.log("recognition end")
+          resultDiv.innerHTML = '';
         }
-      }, function onError(error) {
-        console.error(error)
-        alert("获取授权失败！")
-      })
-    }
+
+        recognition.start();
+      } else {
+        recognition.stop();
+        recognition = null;
+      }
+    });
+
   </script>
-  <div>这是一堆测试问问问问我呢嗯问我呢问问我</div>
-  <div>这是一堆测试问问问问我呢嗯问我呢问问我</div>
-  <div>这是一堆测试问问问问我呢嗯问我呢问问我</div>
-  <div>这是一堆测试问问问问我呢嗯问我呢问问我</div>
-  <div>这是一堆测试问问问问我呢嗯问我呢问问我</div>
-  <div>这是一堆测试问问问问我呢嗯问我呢问问我</div>
-  <div>这是一堆测试问问问问我呢嗯问我呢问问我</div>
+  <script>
+    document.addEventListener('speech-comfirm', function (e) {
+      document.querySelector('#TXSpeechApiResult').innerHTML = e.detail.result
+    })
+  </script>
 </body>
 </html>

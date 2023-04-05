@@ -1,4 +1,11 @@
+/* 悬浮小球交互脚本 */  
 (function () {
+  let ballDom = {
+    textArea: '',
+    speechBtn: ''
+  }
+
+  let disabledComfirm = false
   function init() {
     let isMobile = false;
     if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
@@ -36,6 +43,18 @@
     var startY = 0;
     var offsetX = 0;
     var offsetY = 0;
+
+    function checkDisabledComfirm(){
+      if(!textArea.value || disabledComfirm){
+        comfirmBtn.disabled = true
+      } else {
+        comfirmBtn.disabled = false
+      }
+    }
+
+    textArea.addEventListener('input', () => {
+      checkDisabledComfirm()
+    })
 
     function getNewPosition(offsetX, offsetY, width, height) {
       offsetX = offsetX - width / 2;
@@ -171,15 +190,23 @@
 
       // 将小球恢复到面板的中心位置
       var x, y;
-      if (isMobile) {
-        x = e.changedTouches[0].clientX - popupWidth / 2;
-        y = e.changedTouches[0].clientY - popupHeight / 2;
-      } else {
-        x = e.clientX - popupWidth / 2;
-        y = e.clientY - popupHeight / 2;
+      if(e.isTrusted){
+        if (isMobile) {
+          x = e.changedTouches[0].clientX - popupWidth / 2;
+          y = e.changedTouches[0].clientY - popupHeight / 2;
+        } else {
+          x = e.clientX - popupWidth / 2;
+          y = e.clientY - popupHeight / 2;
+        }
       }
+
       var top = y + popupHeight / 2 - ballRadius / 2;
       var left = x + popupWidth / 2 - ballRadius / 2;
+      if(!x && !y){
+        top = popup.style.top - ballRadius / 2;
+        left = popup.style.left - ballRadius / 2;
+      }
+
       ball.style.top = top + 'px';
       ball.style.left = left + 'px';
 
@@ -187,10 +214,34 @@
       setTimeout(function () {
         ball.style.transform = 'scale(1)';
       }, 0);
+
+      textArea.value = '';
+    }, { passive: false });
+
+    // 当确认按钮被点击
+    comfirmBtn.addEventListener( isMobile ? 'touchend' : 'click', function(e) {
+      e.stopPropagation();
+      // 创建自定义事件
+      var speechComfirm = new CustomEvent("speech-comfirm", {
+        detail: {
+          result: textArea.value
+        }
+      });
+
+      // 触发自定义事件
+      document.dispatchEvent(speechComfirm);
+      closeBtn.click();
     }, { passive: false });
 
     document.body.appendChild(ball);
     document.body.appendChild(popup);
+
+    return {
+      textArea,
+      speechBtn,
+      isMobile,
+      checkDisabledComfirm
+    }
   }
 
   function createBallElement(ballRadius) {
@@ -263,6 +314,7 @@
     textArea.style.backgroundColor = '#F5F5F5';
     textArea.style.border = 'none';
     textArea.style.resize = 'none';
+    textArea.style.padding = '5px';
     textArea.placeholder = '请触发语音识别，然后开始说话...';
     return textArea;
   }
@@ -298,13 +350,127 @@
     comfirmBtn.style.textAlign = 'center';
     comfirmBtn.style.fontSize = '16px';
     comfirmBtn.style.color = 'white';
-    comfirmBtn.textContent = '确认完成';
+    comfirmBtn.textContent = '发送结果';
     comfirmBtn.style.userSelect = 'none';
+    comfirmBtn.disabled = true
     return comfirmBtn;
   }
 
+  /////////////////////////////////////////////////////////////////// 巨大的分割线 ///////////////////////////////////////////////////////////////////
+  /** 获取签名 start */
+  function toUint8Array(wordArray) {
+    // Shortcuts
+    const words = wordArray.words;
+    const sigBytes = wordArray.sigBytes;
+
+    // Convert
+    const u8 = new Uint8Array(sigBytes);
+    for (let i = 0; i < sigBytes; i++) {
+      u8[i] = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
+    }
+    return u8;
+  }
+  function Uint8ArrayToString(fileData){
+    let dataString = '';
+    for (let i = 0; i < fileData.length; i++) {
+      dataString += String.fromCharCode(fileData[i]);
+    }
+    return dataString;
+  }
+  // 签名函数示例
+  function signCallback(signStr) {
+    const secretKey = config.secretKey;
+    const hash = window.CryptoJSTest.HmacSHA1(signStr, secretKey);
+    const bytes = Uint8ArrayToString(toUint8Array(hash));
+    return window.btoa(bytes);
+  }
+  /** 获取签名 end */
+
+  /** 语音识别代码 start */
+  let config = {
+    secretKey: '67xYtyoZ6NQGrEWdXCcomZ8ScWAXlZWD',
+    secretId: 'AKIDeEhvugQ9iV5OQCj38yYsysWw85mCOt9L',
+    appId: 1312578295,
+  }
+
+  const params = {
+    signCallback: signCallback, // 鉴权函数
+    // 用户参数
+    secretid:  config.secretId,
+    appid: config.appId,
+    // 实时识别接口参数
+    engine_model_type : '16k_zh', // 因为内置WebRecorder采样16k的数据，所以参数 engineModelType 需要选择16k的引擎，为 '16k_zh'
+    // 以下为非必填参数，可跟据业务自行修改
+    voice_format : 1,
+    hotword_id : '08003a00000000000000000000000000',
+    needvad: 1,
+    filter_dirty: 1,
+    filter_modal: 2,
+    filter_punc: 0,
+    convert_num_mode : 1,
+    word_info: 2
+  }
+
+  let webAudioSpeechRecognizer;
+  let isCanStop;
+  let resultText = '';
+  function createWebAudioSpeechRecognizer(){
+    webAudioSpeechRecognizer = new WebAudioSpeechRecognizer(params);
+    
+    // 开始识别
+    webAudioSpeechRecognizer.OnRecognitionStart = (res) => {
+      // console.log('OnRecognitionStart->开始识别', res);
+      isCanStop = true;
+      ballDom.speechBtn.textContent = '请说话...'
+    };
+    // 一句话开始
+    webAudioSpeechRecognizer.OnSentenceBegin = (res) => {
+      // console.log('OnSentenceBegin->一句话开始', res);
+      // isCanStop = true;
+      // ballDom.speechBtn.textContent = '请说话...'
+    };
+    // 识别变化时
+    webAudioSpeechRecognizer.OnRecognitionResultChange = (res) => {
+      // console.log('OnRecognitionResultChange->识别变化时', res);
+      ballDom.textArea.value = `${resultText}${res.result.voice_text_str}`;
+    };
+    // 一句话结束
+    webAudioSpeechRecognizer.OnSentenceEnd = (res) => {
+      // console.log('OnSentenceEnd->一句话结束', res);
+      resultText += res.result.voice_text_str;
+      ballDom.textArea.value = resultText;
+    };
+    // 识别结束
+    webAudioSpeechRecognizer.OnRecognitionComplete = (res) => {
+      // console.log('OnRecognitionComplete->识别结束', res);
+      ballDom.speechBtn.textContent = '语音识别'
+      disabledComfirm = false
+      ballDom.checkDisabledComfirm()
+    };
+    // 识别错误
+    webAudioSpeechRecognizer.OnError = (res) => {
+      // console.error('OnError->识别失败', res)
+      ballDom.speechBtn.textContent = '语音识别'
+      alert('识别失败:' + JSON.stringify(res))
+    };
+  }
+  /** 语音识别代码 end */
+
   window.onload = function() {
-    init()
+    ballDom = init()
+    
+    ballDom.speechBtn.addEventListener( ballDom.isMobile ? 'touchend' : 'click', function () {
+      if (isCanStop) {
+        webAudioSpeechRecognizer.stop();
+      } else {
+        ballDom.speechBtn.textContent = '链接中...'
+        disabledComfirm = true
+        ballDom.checkDisabledComfirm()
+        webAudioSpeechRecognizer.start();
+      }
+    });
+
+    createWebAudioSpeechRecognizer()
   }
 })();
 
