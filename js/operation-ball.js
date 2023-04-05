@@ -184,14 +184,17 @@
         popup.style.transform = 'scale(1)';
       }, 0);
     });
-    
-    closeBtn.addEventListener( isMobile ? 'touchend' : 'click', function(e) {
-      e.preventDefault();
+
+    function closeBtnClick(e) {
+      alert(3)
+      e.preventDefault && e.preventDefault();
       popup.style.display = 'none';
       ball.style.display = 'block';
 
-      // 将小球恢复到面板的中心位置
+      // 将小球恢复到面板的右上角位置
       var x, y;
+      alert(4)
+
       if(e.isTrusted){
         if (isMobile) {
           x = e.changedTouches[0].clientX - popupWidth / 2;
@@ -218,7 +221,9 @@
       }, 0);
 
       textArea.value = '';
-    }, { passive: false });
+    }
+    closeBtn.addEventListener( isMobile ? 'touchend' : 'click', closeBtnClick, { passive: false });
+    closeBtn.addEventListener( 'closeBtnClick', closeBtnClick );
 
     // 当确认按钮被点击
     comfirmBtn.addEventListener( isMobile ? 'touchend' : 'click', function(e) {
@@ -235,7 +240,9 @@
 
       // 触发自定义事件
       document.dispatchEvent(speechComfirm);
-      closeBtn.dispatchEvent(new Event("click"));
+      alert(1)
+      closeBtn.dispatchEvent(new CustomEvent("closeBtnClick"));
+      alert(2)
     }, { passive: false });
 
     document.body.appendChild(ball);
