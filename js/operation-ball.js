@@ -395,11 +395,7 @@
   /** 获取签名 end */
 
   /** 语音识别代码 start */
-  let config = {
-    secretKey: '67xYtyoZ6NQGrEWdXCcomZ8ScWAXlZWD',
-    secretId: 'AKIDeEhvugQ9iV5OQCj38yYsysWw85mCOt9L',
-    appId: 1312578295,
-  }
+  let config = window.getActivate()
 
   const params = {
     signCallback: signCallback, // 鉴权函数
@@ -468,6 +464,12 @@
     };
   }
   /** 语音识别代码 end */
+  /** 语音识别激活解密 */
+  function switchActiveKey(){
+    
+
+  }
+  
 
   document.addEventListener('init-speech-ball', function() {
     ballDom = init()
