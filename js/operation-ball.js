@@ -459,15 +459,17 @@
     };
     // 识别错误
     webAudioSpeechRecognizer.OnError = (res) => {
-      // console.error('OnError->识别失败', res)
+      console.error('OnError->识别失败', res)
       ballDom.speechBtn.textContent = '语音识别'
       ballDom.speechBtn.style.backgroundColor = '#87CEFA';
+      disabledComfirm = false
+      ballDom.checkDisabledComfirm()
       alert('识别失败:' + JSON.stringify(res))
     };
   }
   /** 语音识别代码 end */
 
-  window.onload = function() {
+  document.addEventListener('init-speech-ball', function() {
     ballDom = init()
     
     ballDom.speechBtn.addEventListener( ballDom.isMobile ? 'touchend' : 'click', function () {
@@ -483,6 +485,6 @@
     });
 
     createWebAudioSpeechRecognizer()
-  }
+  })
 })();
 

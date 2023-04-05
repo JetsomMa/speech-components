@@ -81,6 +81,8 @@
 
   </script>
   <script>
+    document.dispatchEvent(new CustomEvent('init-speech-ball'));
+
     document.addEventListener('speech-comfirm', function (e) {
       document.querySelector('#TXSpeechApiResult').innerHTML = e.detail.result
     })
