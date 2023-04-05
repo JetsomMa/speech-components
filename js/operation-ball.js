@@ -231,6 +231,7 @@
       // 触发自定义事件
       document.dispatchEvent(speechComfirm);
       closeBtn.click();
+      closeBtn.touchend();
     }, { passive: false });
 
     document.body.appendChild(ball);
