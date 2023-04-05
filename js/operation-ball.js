@@ -186,14 +186,12 @@
     });
 
     function closeBtnClick(e) {
-      alert(3)
       e.preventDefault && e.preventDefault();
       popup.style.display = 'none';
       ball.style.display = 'block';
 
       // 将小球恢复到面板的右上角位置
       var x, y;
-      alert(4)
 
       if(e.isTrusted){
         if (isMobile) {
@@ -228,7 +226,7 @@
     // 当确认按钮被点击
     comfirmBtn.addEventListener( isMobile ? 'touchend' : 'click', function(e) {
       e.stopPropagation();
-      if(comfirmBtn.disabled){
+      if(comfirmBtn.disabled || !textArea.value){
         return
       }
       // 创建自定义事件
@@ -240,9 +238,7 @@
 
       // 触发自定义事件
       document.dispatchEvent(speechComfirm);
-      alert(1)
       closeBtn.dispatchEvent(new CustomEvent("closeBtnClick"));
-      alert(2)
     }, { passive: false });
 
     document.body.appendChild(ball);
@@ -355,7 +351,7 @@
     comfirmBtn.style.marginLeft = '5%';
     comfirmBtn.style.marginBottom = '5px';
     comfirmBtn.style.height = '35px';
-    comfirmBtn.style.backgroundColor = '#87CEFA';
+    comfirmBtn.style.backgroundColor = '#999999';
     comfirmBtn.style.bottom = '0';
     comfirmBtn.style.cursor = 'pointer';
     comfirmBtn.style.borderRadius = '10px';
