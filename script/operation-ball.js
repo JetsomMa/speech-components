@@ -469,20 +469,24 @@
   /** 语音识别代码 end */
   
   document.addEventListener('init-speech-ball', function() {
-    ballDom = init()
-    
-    ballDom.speechBtn.addEventListener( ballDom.isMobile ? 'touchend' : 'click', function () {
-      if (webAudioSpeechRecognizer) {
-        webAudioSpeechRecognizer.stop();
-      } else {
-        ballDom.speechBtn.textContent = '链接中...'
-        ballDom.speechBtn.style.backgroundColor = '#999999';
-        disabledComfirm = true
-        ballDom.checkDisabledComfirm()
-        webAudioSpeechRecognizer = createWebAudioSpeechRecognizer()
-        webAudioSpeechRecognizer.start();
-      }
-    });
+    if(!window.speechBallInited){
+      ballDom = init()
+      
+      ballDom.speechBtn.addEventListener( ballDom.isMobile ? 'touchend' : 'click', function () {
+        if (webAudioSpeechRecognizer) {
+          webAudioSpeechRecognizer.stop();
+        } else {
+          ballDom.speechBtn.textContent = '链接中...'
+          ballDom.speechBtn.style.backgroundColor = '#999999';
+          disabledComfirm = true
+          ballDom.checkDisabledComfirm()
+          webAudioSpeechRecognizer = createWebAudioSpeechRecognizer()
+          webAudioSpeechRecognizer.start();
+        }
+      });
+
+      window.speechBallInited = true
+    }
   })
 })();
 
